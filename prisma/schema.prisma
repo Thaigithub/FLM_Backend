@@ -1,0 +1,103 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+model User {
+  id String @id @unique @default(uuid())
+  email String @unique
+  hashedPassword String
+  firstName String
+  lastName String
+  unit String
+  role Int
+  disable Boolean @default(false)
+  execId String?
+  forms Form[]
+  formHistories FormHistory[]
+}
+// role:
+// 1: borrower
+// 2: exec borrower
+// 3: exec lender
+// 4: lender
+// 5: admin
+model Form {
+  id String @id @unique @default(uuid())
+  borrowDate DateTime @db.Date
+  returnDate DateTime @db.Date
+  project String
+  decision String
+  status Int
+  user User @relation(fields: [userId], references: [id])
+  userId String
+  formHistories FormHistory[]
+  deviceBorrows DeviceBorrow[]
+}
+// status:
+// 10: created by borrower and waiting for execborrower approved
+// 20: approved by execborrower and waiting for execlender
+// 21: denied by execborrower
+// 22: denied by execborrower by execlender
+// 30: approved by execlender and ready for taking
+// 31: denied by execlender and waiting for denied by execborrower
+// 40: took and waiting for returned
+// 50: asked to return and waiting for execborrower approved
+// 60: approved by execborrower and waiting for execlender
+// 61: denied by execborrower
+// 62: denied by execborrower by execlender
+// 70: approved by execlender and ready for returning
+// 71: denied by execlender and waiting for denied by execborrower
+// 80: received return
+// 90: admin denied
+model DeviceBorrow {
+  id String @id @unique @default(uuid())
+  form Form @relation(fields: [formId], references: [id])
+  formId String
+  device Device @relation(fields: [deviceId], references: [id])
+  deviceId String
+  note String?
+}
+model Device {
+  id String @id @unique
+  name String
+  status Int
+  deviceHistory DeviceHistory[]
+  deviceImage DeviceImage[]
+  deviceBorrow DeviceBorrow[]
+}
+// status
+// 0: at store
+// 1: approved for borrowed
+// 2: borrowed
+// 3: approved for returned
+// 4: not available
+model FormHistory {
+  id String @id @unique @default(uuid())
+  form Form @relation(fields: [formId], references: [id])
+  formId String
+  date DateTime @default(now())
+  status Int
+  user User @relation(fields: [userId], references: [id])
+  userId String
+}
+model DeviceHistory {
+  id String @id @unique @default(uuid())
+  device Device @relation(fields: [deviceId], references: [id])
+  deviceId String
+  date DateTime @default(now())
+  status Int?
+  formId String?
+}
+model DeviceImage {
+  id String @id @unique @default(uuid())
+  device Device @relation(fields: [deviceId], references: [id])
+  deviceId String
+  url String?
+}
