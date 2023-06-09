@@ -13,14 +13,8 @@ export class FormService {
     ){}
     async create(body:FormCreateDto, jwtToken:string){
         try{
-<<<<<<< HEAD
-            const userId = this.jwtService.decode(jwtToken)['userId']
-            const role = this.jwtService.decode(jwtToken)['role']
-            console.log(body)
-=======
             const userId = await this.jwtService.decode(jwtToken)['userId']
             const role = await this.jwtService.decode(jwtToken)['role']
->>>>>>> 266f367d25b07e3abd15a91da9d497c3ddab9a99
             if (role===5){
                 if (body.userId===null) return {
                     message: "Missing userId"
