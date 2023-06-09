@@ -44,7 +44,7 @@ export class AuthService {
                 userId: user.id,
                 role: user.role
             },{
-                expiresIn: '10m',
+                // expiresIn:''
                 secret: this.configService.get('JWT_SECRET')
             })
             return {

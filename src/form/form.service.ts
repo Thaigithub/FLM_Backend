@@ -15,6 +15,7 @@ export class FormService {
         try{
             const userId = this.jwtService.decode(jwtToken)['userId']
             const role = this.jwtService.decode(jwtToken)['role']
+            console.log(body)
             if (role===5){
                 if (body.userId===null) return {
                     message: "Missing userId"
