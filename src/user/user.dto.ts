@@ -19,8 +19,6 @@ export class UserUpdatedetailDto {
     firstName: string
 
     @ApiProperty()
-    @IsString()
-    @IsNotEmpty()
     password: string
 }
 

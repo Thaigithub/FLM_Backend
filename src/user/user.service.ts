@@ -12,6 +12,23 @@ export class UserService {
     async register(registerdata: UserRegisterDto){
         const hasedPassword = await argon.hash(registerdata.password)
         try {
+            if (registerdata.role===1) {
+                if (!registerdata.execId) {
+                    return{
+                        message: "Missing execId"
+                    }
+                }
+                const execId = await this.prismaService.user.findUnique({
+                    where:{
+                        id: registerdata.execId
+                    }
+                })
+                if (!execId) {
+                    return {
+                        message: "ExecId not found"
+                    }
+                }
+            }
             await this.prismaService.user.create({
                 data: {
                     email: registerdata.email,
@@ -46,6 +63,7 @@ export class UserService {
                     firstName: true,
                     lastName: true,
                     unit: true,
+                    role:true
                 }
             })
             return user
@@ -55,19 +73,32 @@ export class UserService {
         }
     }
     async updatedetail(jwtToken:string, data:UserUpdatedetailDto) {
-        const userId = await this.jwtService.decode(jwtToken)['userId']
-        const hasedPassword = await argon.hash(data.password)
         try{
-            await this.prismaService.user.update({
-                where: {
-                    id: userId
-                },
-                data: {
-                    lastName: data.lastName,
-                    firstName:data.firstName,
-                    hashedPassword: hasedPassword                
-                }
-            })
+            const userId = await this.jwtService.decode(jwtToken)['userId']
+            if (data.password) {
+                const hasedPassword = await argon.hash(data.password)
+                await this.prismaService.user.update({
+                    where: {
+                        id: userId
+                    },
+                    data: {
+                        lastName: data.lastName,
+                        firstName:data.firstName,
+                        hashedPassword: hasedPassword                
+                    }
+                })
+            }
+            else {
+                await this.prismaService.user.update({
+                    where: {
+                        id: userId
+                    },
+                    data: {
+                        lastName: data.lastName,
+                        firstName: data.firstName             
+                    }
+                })
+            }
             return {
                 message:"Successful"
             }

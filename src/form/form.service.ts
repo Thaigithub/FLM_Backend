@@ -13,9 +13,14 @@ export class FormService {
     ){}
     async create(body:FormCreateDto, jwtToken:string){
         try{
+<<<<<<< HEAD
             const userId = this.jwtService.decode(jwtToken)['userId']
             const role = this.jwtService.decode(jwtToken)['role']
             console.log(body)
+=======
+            const userId = await this.jwtService.decode(jwtToken)['userId']
+            const role = await this.jwtService.decode(jwtToken)['role']
+>>>>>>> 266f367d25b07e3abd15a91da9d497c3ddab9a99
             if (role===5){
                 if (body.userId===null) return {
                     message: "Missing userId"
@@ -128,10 +133,10 @@ export class FormService {
             console.log(error)
         }
     }
-    getall(jwtToken:string) {
+    async getall(jwtToken:string) {
         try{
-            const userId = this.jwtService.decode(jwtToken)['userId']
-            const role = this.jwtService.decode(jwtToken)['role']
+            const userId = await this.jwtService.decode(jwtToken)['userId']
+            const role = await this.jwtService.decode(jwtToken)['role']
             const forms = new Promise(async (resolve)=>{
                 if (role === 1) {
                     resolve(await this.prismaService.form.findMany({
@@ -144,7 +149,8 @@ export class FormService {
                             returnDate: true,
                             project: true,
                             decision: true,
-                            status: true
+                            status: true,
+                            userId: true
                         }
                     }))
                 }
@@ -169,7 +175,8 @@ export class FormService {
                                 returnDate: true,
                                 project: true,
                                 decision: true,
-                                status: true
+                                status: true,
+                                userId: true
                             }
                         }))
                     },Promise.resolve([])))
@@ -187,7 +194,8 @@ export class FormService {
                             returnDate: true,
                             project: true,
                             decision: true,
-                            status: true
+                            status: true,
+                            userId: true
                         }
                     }))
                 }
@@ -204,7 +212,8 @@ export class FormService {
                             returnDate: true,
                             project: true,
                             decision: true,
-                            status: true
+                            status: true,
+                            userId: true
                         }
                     }))
                 }
@@ -212,8 +221,18 @@ export class FormService {
                     resolve(await this.prismaService.form.findMany({}))
                 }
             })
-            return Promise.resolve(forms.then((data:any)=>{
-                return data.map((element)=>{
+            return await Promise.resolve(forms.then(async(data:any)=>{
+                return await Promise.all(data.map(async (element)=>{
+                    const user = await this.prismaService.user.findUnique({
+                        where:{
+                            id: element.userId
+                        },
+                        select:{
+                            firstName: true,
+                            lastName: true,
+                            unit: true
+                        }
+                    })
                     const {id,status,project,decision} = element
                     return {
                         id,
@@ -221,9 +240,10 @@ export class FormService {
                         project,
                         decision,
                         borrowDate: format(new Date(element.borrowDate), 'dd-MM-yyyy'),
-                        returnDate: format(new Date(element.returnDate), 'dd-MM-yyyy')
+                        returnDate: format(new Date(element.returnDate), 'dd-MM-yyyy'),
+                        ...user
                     }
-                })
+                }))
             }))
         }catch(error){
             console.log(error)
@@ -291,8 +311,8 @@ export class FormService {
     }
     async approve(body: FormApproveDto, jwtToken:string){
         try{
-            const userId = this.jwtService.decode(jwtToken)['userId']
-            const role = this.jwtService.decode(jwtToken)['role']
+            const userId = await this.jwtService.decode(jwtToken)['userId']
+            const role = await this.jwtService.decode(jwtToken)['role']
             const sender = await this.prismaService.user.findUnique({
                 where:{
                     id: userId
@@ -532,8 +552,8 @@ export class FormService {
     }
     async reject(body: FormRejectDto, jwtToken:string){
         try{
-            const userId = this.jwtService.decode(jwtToken)['userId']
-            const role = this.jwtService.decode(jwtToken)['role']
+            const userId = await this.jwtService.decode(jwtToken)['userId']
+            const role = await this.jwtService.decode(jwtToken)['role']
             const email = []
             const form = await this.prismaService.form.findUnique({
                 where:{
@@ -673,7 +693,7 @@ export class FormService {
     }
     async return(body: FormReturnDto, jwtToken:string){
         try{
-            const userId = this.jwtService.decode(jwtToken)['userId']
+            const userId = await this.jwtService.decode(jwtToken)['userId']
             const form = await this.prismaService.form.findUnique({
                 where:{
                     id:body.formId
@@ -770,7 +790,7 @@ export class FormService {
     async updatestatus(body:FormUpdateStatusDto,jwtToken:string){
         try {
             const mail = []
-            const userId = this.jwtService.decode(jwtToken)['userId']
+            const userId = await this.jwtService.decode(jwtToken)['userId']
             const form = await this.prismaService.form.update({
                 where:{
                     id: body.formId
