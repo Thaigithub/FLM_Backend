@@ -35,7 +35,7 @@ export class FormController {
     @ApiBody({
         type:FormDetailDto
     })
-    @Get('getdetail')
+    @Post('getdetail')
     getdetail(@Body() body:FormDetailDto) {
         return this.formService.getdetail(body)
     }

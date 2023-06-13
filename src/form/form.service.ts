@@ -707,7 +707,7 @@ export class FormService {
                     message: "Form is not yours"
                 }
             }
-            else if(![50,61,62].includes(form.status)) {
+            else if(![40,61,62].includes(form.status)) {
                 return {
                     message: "Invalid request"
                 }
