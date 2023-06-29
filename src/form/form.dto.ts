@@ -30,41 +30,95 @@ export class FormCreateDto {
     @ApiProperty()
     userId: string
 }
-export class FormDetailDto{
-    @ApiProperty()
-    @IsString()
-    @IsNotEmpty()
-    formId: string
-}
 
-export class FormApproveDto{
-    @ApiProperty()
-    @IsString()
-    @IsNotEmpty()
-    formId: string
-}
-
-export class FormRejectDto{
-    @ApiProperty()
-    @IsString()
-    @IsNotEmpty()
-    formId: string
-}
-
-export class FormReturnDto{
-    @ApiProperty()
-    @IsString()
-    @IsNotEmpty()
-    formId: string
-}
-export class FormUpdateStatusDto{
+export class FormConfigDto {
     @ApiProperty()
     @IsString()
     @IsNotEmpty()
     formId: string
 
     @ApiProperty()
-    @IsNumber()
+    @IsISO8601()
     @IsNotEmpty()
-    status: number
+    borrowDate: string
+    // YYYY-MM-DDTHH:MM:SSZ
+    @ApiProperty()
+    @IsISO8601()
+    @IsNotEmpty()
+    returnDate: string
+
+    @ApiProperty()
+    @IsString()
+    @IsNotEmpty()
+    project: string
+
+    @ApiProperty()
+    @IsString()
+    @IsNotEmpty()
+    decision: string
+
+    @ApiProperty()
+    @IsArray()
+    @IsNotEmpty()
+    devices: Array<string>
+
+    @ApiProperty()
+    userId: string
+}
+export class FormAddAttachDto {
+    @ApiProperty()
+    @IsString()
+    @IsNotEmpty()
+    formId: string
+}
+export class FormDeleteAttachDto {
+    @ApiProperty()
+    @IsString()
+    @IsNotEmpty()
+    id: string
+}
+export class FormLoadAttachDto {
+    @ApiProperty()
+    @IsString()
+    @IsNotEmpty()
+    id: string
+}
+export class FormCreateReturnDto {
+    @ApiProperty()
+    @IsString()
+    @IsNotEmpty()
+    formId:string
+
+    @ApiProperty()
+    @IsArray()
+    @IsNotEmpty()
+    devices: Array<string>
+}
+export class FormConfigReturnDto {
+    @ApiProperty()
+    @IsString()
+    @IsNotEmpty()
+    formId: string
+
+    @ApiProperty()
+    @IsArray()
+    @IsNotEmpty()
+    devices: Array<string>
+}
+export class FormConfirmDto {
+    @ApiProperty()
+    @IsString()
+    @IsNotEmpty()
+    formId: string
+}
+export class FormEvaluateDto {
+    @ApiProperty()
+    @IsString()
+    @IsNotEmpty()
+    formId: string
+
+    @ApiProperty()
+    @IsArray()
+    @IsNotEmpty()
+    evaluate: {[deviceId:string]:boolean}
 }

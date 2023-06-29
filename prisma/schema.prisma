@@ -21,6 +21,7 @@ model User {
   execId String?
   forms Form[]
   formHistories FormHistory[]
+  evaluateForm EvaluateForm[]
 }
 // role:
 // 1: borrower
@@ -28,34 +29,64 @@ model User {
 // 3: exec lender
 // 4: lender
 // 5: admin
+// 6: examiner
 model Form {
   id String @id @unique @default(uuid())
   borrowDate DateTime @db.Date
   returnDate DateTime @db.Date
   project String
-  decision String
   status Int
   user User @relation(fields: [userId], references: [id])
   userId String
-  formHistories FormHistory[]
   deviceBorrows DeviceBorrow[]
+  formAttach FormAttach[]
+  returnForm ReturnForm[]
 }
 // status:
-// 10: created by borrower and waiting for execborrower approved
+// 0: canceled
+// 10: waiting for execborrower approved
 // 20: approved by execborrower and waiting for execlender
-// 21: denied by execborrower
-// 22: denied by execborrower by execlender
-// 30: approved by execlender and ready for taking
+// 21: denied by execborrower and may be fixed by borrower
+// 30: approved by execlender and waiting for configuration of lender
 // 31: denied by execlender and waiting for denied by execborrower
-// 40: took and waiting for returned
-// 50: asked to return and waiting for execborrower approved
-// 60: approved by execborrower and waiting for execlender
-// 61: denied by execborrower
-// 62: denied by execborrower by execlender
-// 70: approved by execlender and ready for returning
-// 71: denied by execlender and waiting for denied by execborrower
-// 80: received return
-// 90: admin denied
+// 40: request for confirmation of borrower
+// 41: rerequest approve of execlender for configuration
+// 50: approved by borrower and waiting for confirmation of examination of borrower
+// 51: reject by borrower and waiting for lender configuration
+// 55: borrowed
+// 100: finished
+model ReturnForm{
+  id String @id @unique @default(uuid())
+  form Form @relation(fields: [formId], references: [id])
+  formId String
+  status Int
+}
+// status:
+// 60: request to return and waiting for execborrower approved
+// 70: approved by execborrower and waiting for execlender
+// 71: denied by execborrower and may be fixed by borrower
+// 80: approved by execlender and waiting for configuration of lender
+// 81: denied by execlender and waiting for denied by execborrower
+// 90: request for confirmation of borrower
+// 91: rerequest approve of execlender for configuration
+// 95: approved by borrower and waiting for confirmation of examination of borrower examiner
+// 100: return confirmed
+model FormHistory {
+  id String @id @unique @default(uuid())
+  formId String
+  date DateTime @default(now())
+  status Int
+  user User @relation(fields: [userId], references: [id])
+  userId String
+  note String?
+}
+model FormAttach {
+  id String @id @unique @default(uuid())
+  form Form @relation(fields: [formId], references: [id])
+  formId String
+  url String?
+  name String
+}
 model DeviceBorrow {
   id String @id @unique @default(uuid())
   form Form @relation(fields: [formId], references: [id])
@@ -63,13 +94,16 @@ model DeviceBorrow {
   device Device @relation(fields: [deviceId], references: [id])
   deviceId String
   note String?
+  returnFormId String?
+  deviceEvaluate DeviceEvaluate[]
 }
 model Device {
   id String @id @unique
   name String
   status Int
+  group String?
   deviceHistory DeviceHistory[]
-  deviceImage DeviceImage[]
+  deviceMedia DeviceMedia[]
   deviceBorrow DeviceBorrow[]
 }
 // status
@@ -78,15 +112,6 @@ model Device {
 // 2: borrowed
 // 3: approved for returned
 // 4: not available
-model FormHistory {
-  id String @id @unique @default(uuid())
-  form Form @relation(fields: [formId], references: [id])
-  formId String
-  date DateTime @default(now())
-  status Int
-  user User @relation(fields: [userId], references: [id])
-  userId String
-}
 model DeviceHistory {
   id String @id @unique @default(uuid())
   device Device @relation(fields: [deviceId], references: [id])
@@ -94,10 +119,33 @@ model DeviceHistory {
   date DateTime @default(now())
   status Int?
   formId String?
+  note String?
 }
-model DeviceImage {
+model DeviceMedia {
   id String @id @unique @default(uuid())
   device Device @relation(fields: [deviceId], references: [id])
   deviceId String
   url String?
 }
+model EvaluateForm {
+  id String @id @unique @default(uuid())
+  formId String
+  user User @relation(fields: [userId], references: [id])
+  userId String
+  type Boolean
+  deviceEvaluate DeviceEvaluate[]
+}
+// type:
+// False: Borrow check
+// True: Return check
+model DeviceEvaluate {
+  id String @id @unique @default(uuid())
+  evaluateForm EvaluateForm @relation(fields: [evaluateFormId], references: [id])
+  evaluateFormId String
+  deviceBorrow DeviceBorrow @relation(fields: [deviceBorrowId], references: [id])
+  deviceBorrowId String
+  status Boolean
+}
+// status
+// True: Normal
+// False: Malfunction

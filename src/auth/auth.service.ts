@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
-import { AuthLoginDto } from './auth.dto';
+import { AuthLoginDto} from './auth.dto';
 import * as argon from 'argon2'
 import { ConfigService } from '@nestjs/config';
 @Injectable()
@@ -11,11 +11,11 @@ export class AuthService {
         private jwtService: JwtService,
         private configService: ConfigService
     ) {}
-    async login(logindata: AuthLoginDto){
+    async login(body: AuthLoginDto){
         try {
             const user = await this.prismaService.user.findUnique({
                 where: {
-                    email: logindata.email
+                    email: body.email
                 },
                 select: {
                     id: true,
@@ -26,18 +26,27 @@ export class AuthService {
             })
             if(!user) {
                 return {
-                    message: "User not found"
+                    message: "User not found",
+                    accessToken: null,
+                    role: null,
+                    status: 404
                 }
             }
             if(user.disable) {
                 return {
-                    message: "User is disabled"
+                    message: "User is disabled",
+                    accessToken: null,
+                    role: null,
+                    status: 403
                 }
             }
-            const passwordMatched = await argon.verify(user.hashedPassword, logindata.password)
+            const passwordMatched = await argon.verify(user.hashedPassword, body.password)
             if (!passwordMatched) {
                 return {
-                    message: "Wrong password"
+                    message: "Wrong password",
+                    accessToken: null,
+                    role: null,
+                    status: 401
                 }
             }
             const jwtToken = await this.jwtService.signAsync({
@@ -48,8 +57,10 @@ export class AuthService {
                 secret: this.configService.get('JWT_SECRET')
             })
             return {
+                message: "Successful",
                 accessToken: jwtToken,
-                role: user.role
+                role: user.role,
+                status: 200
             }
         }
         catch(error) {

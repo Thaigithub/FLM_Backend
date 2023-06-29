@@ -1,69 +1,164 @@
-import { Controller, Post, UseGuards, Body, Req, Get } from '@nestjs/common';
+import { Controller, Post, UseGuards, Body, Req, Get, Res, UseInterceptors, UploadedFiles, Param } from '@nestjs/common';
+import { Response } from 'express';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { FormService } from './form.service';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/auth.strategy';
-import { FormCreateDto, FormDetailDto, FormApproveDto, FormRejectDto, FormReturnDto, FormUpdateStatusDto } from './form.dto';
+import { FormCreateDto, FormConfigDto, FormAddAttachDto, FormDeleteAttachDto, FormLoadAttachDto, FormCreateReturnDto, FormConfigReturnDto, FormConfirmDto, FormEvaluateDto } from './form.dto';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 @ApiTags('Form')
 @Controller('form')
 export class FormController {
-    constructor(private formService: FormService){}
+    constructor(
+        private formService: FormService
+    ){}
     @UseGuards(AuthGuard('jwt'))
-    @UseGuards(new RolesGuard([1,5]))
+    @UseGuards(new RolesGuard([1]))
     @ApiBody({
         type:FormCreateDto
     })
     @Post('create')
-    create(@Req() req: Request, @Body() body:FormCreateDto){
-        return this.formService.create(body,req.headers['authorization'].substring(7))
+    @UseInterceptors(FilesInterceptor('attaches'))
+    async create(@UploadedFiles() attaches: Express.Multer.File[],@Req() req: Request, @Body() body:FormCreateDto, @Res() res: Response){
+        const response = await this.formService.create(body,req.headers['authorization'].substring(7), attaches)
+        const {status} = response
+        delete response.status
+        res.status(status).json(response)
+    }
+    @UseGuards(AuthGuard('jwt'))
+    @UseGuards(new RolesGuard([1,4]))
+    @ApiBody({
+        type:FormConfigDto
+    })
+    @Post('config')
+    async config(@Body() body: FormConfigDto, @Req() req: Request, @Res() res: Response){
+        const response = await this.formService.config(body, req.headers['authorization'].substring(7))
+        const {status} = response
+        delete response.status
+        res.status(status).json(response)
+    }
+    @UseGuards(AuthGuard('jwt'))
+    @UseGuards(new RolesGuard([1,4]))
+    @ApiBody({
+        type: FormAddAttachDto
+    })
+    @Post('addattach')
+    @UseInterceptors(FilesInterceptor('attaches'))
+    async addattach(@Body() body: FormAddAttachDto,@UploadedFiles() attaches: Express.Multer.File[], @Res() res: Response){
+        const response = await this.formService.addattach(body,attaches)
+        const {status} = response
+        delete response.status
+        res.status(status).json(response)
+    }
+    @UseGuards(AuthGuard('jwt'))
+    @UseGuards(new RolesGuard([1,4]))
+    @ApiBody({
+        type: FormDeleteAttachDto
+    })
+    @Post('deleteattach')
+    async deleteattach(@Body() body: FormDeleteAttachDto, @Res() res: Response){
+        const response = await this.formService.deleteattach(body)
+        const {status} = response
+        delete response.status
+        res.status(status).json(response)
+    }
+    @UseGuards(AuthGuard('jwt'))
+    @ApiBody({
+        type: FormLoadAttachDto
+    })
+    @Post('loadattach')
+    async loadattach(@Body() body: FormLoadAttachDto, @Res() res: Response){
+        await this.formService.loadattach(body,res)
     }
     @UseGuards(AuthGuard('jwt'))
     @UseGuards(new RolesGuard([1]))
     @ApiBody({
-        type:FormReturnDto
+        type:FormCreateReturnDto
     })
-    @Post('return')
-    return(@Req() req: Request, @Body() body:FormReturnDto){
-        return this.formService.return(body,req.headers['authorization'].substring(7))
+    @Post('createreturn')
+    async createreturn(@Req() req: Request, @Body() body:FormCreateReturnDto, @Res() res: Response){
+        const response = await this.formService.createreturn(body,req.headers['authorization'].substring(7))
+        const {status} = response
+        delete response.status
+        res.status(status).json(response)
     }
     @UseGuards(AuthGuard('jwt'))
+    @UseGuards(new RolesGuard([1,4]))
+    @ApiBody({
+        type:FormConfigReturnDto
+    })
+    @Post('configreturn')
+    async configreturn(@Body() body: FormConfigReturnDto, @Req() req: Request, @Res() res: Response){
+        const response = await this.formService.configreturn(body, req.headers['authorization'].substring(7))
+        const {status} = response
+        delete response.status
+        res.status(status).json(response)
+    }
+    @UseGuards(AuthGuard('jwt'))
+    @UseGuards(new RolesGuard([1,2,3,4]))
+    @ApiBody({
+        type:FormConfirmDto
+    })
+    @Post('approve/:type')
+    async approve(@Res() res: Response, @Body() body: FormConfirmDto, @Req() req: Request,@Param('type') type:string){
+        const response = await this.formService.approve(type,body, req.headers['authorization'].substring(7))
+        const {status} = response
+        delete response.status
+        res.status(status).json(response)
+    }
+    @UseGuards(AuthGuard('jwt'))
+    @UseGuards(new RolesGuard([1,2,3]))
+    @ApiBody({
+        type:FormConfirmDto
+    })
+    @Post('reject/:type')
+    async reject(@Res() res: Response, @Body() body: FormConfirmDto, @Req() req: Request,@Param('type') type:string){
+        const response = await this.formService.reject(type,body, req.headers['authorization'].substring(7))
+        const {status} = response
+        delete response.status
+        res.status(status).json(response)
+    }
+    @UseGuards(AuthGuard('jwt'))
+    @UseGuards(new RolesGuard([1]))
+    @ApiBody({
+        type:FormConfirmDto
+    })
+    @Post('cancel')
+    async cancel(@Res() res: Response, @Body() body: FormConfirmDto, @Req() req: Request){
+        const response = await this.formService.cancel(body, req.headers['authorization'].substring(7))
+        const {status} = response
+        delete response.status
+        res.status(status).json(response)
+    }
+    @UseGuards(AuthGuard('jwt'))
+    @UseGuards(new RolesGuard([1,6]))
+    @ApiBody({
+        type: FormEvaluateDto
+    })
+    @Post('evaluate/:type')
+    async evaluate(@Res() res: Response, @Body() body: FormEvaluateDto, @Req() req: Request){
+        const response = await this.formService.evaluate(body, req.headers['authorization'].substring(7))
+        const {status} = response
+        delete response.status
+        res.status(status).json(response)
+    }
+    @UseGuards(AuthGuard('jwt'))
+    @ApiBody({
+        type: FormEvaluateDto
+    })
     @Get('getall')
-    getall(@Req() req: Request){
-        return this.formService.getall(req.headers['authorization'].substring(7))
+    async getall(@Res() res: Response, @Req() req: Request){
+        const response = await this.formService.getall(req.headers['authorization'].substring(7))
+        const {status} = response
+        delete response.status
+        res.status(status).json(response.message)
     }
     @UseGuards(AuthGuard('jwt'))
-    @ApiBody({
-        type:FormDetailDto
-    })
-    @Post('getdetail')
-    getdetail(@Body() body:FormDetailDto) {
-        return this.formService.getdetail(body)
+    @Get('detail/:type/:id')
+    async getdetail(@Res() res: Response, @Param('type') type:string,  @Param('id') id:string){
+        const response = await this.formService.getdetail(type,id)
+        const {status} = response
+        delete response.status
+        res.status(status).json(response)
     }
-    @UseGuards(AuthGuard('jwt'))
-    @UseGuards(new RolesGuard([5]))
-    @ApiBody({
-        type:FormUpdateStatusDto
-    })
-    @Post('updatestatus')
-    update(@Req() req: Request,@Body() body:FormUpdateStatusDto) {
-        return this.formService.updatestatus(body,req.headers['authorization'].substring(7))
-    }
-    @UseGuards(AuthGuard('jwt'))
-    @UseGuards(new RolesGuard([2,3,4]))
-    @ApiBody({
-        type:FormApproveDto
-    })
-    @Post('approve')
-    approve(@Req() req: Request,@Body() body:FormApproveDto) {
-        return this.formService.approve(body, req.headers['authorization'].substring(7))
-    }
-    @UseGuards(AuthGuard('jwt'))
-    @UseGuards(new RolesGuard([2,3]))
-    @ApiBody({
-        type:FormRejectDto
-    })
-    @Post('reject')
-    reject(@Req() req: Request,@Body() body:FormRejectDto) {
-        return this.formService.reject(body, req.headers['authorization'].substring(7))
-    }
-}
+}   

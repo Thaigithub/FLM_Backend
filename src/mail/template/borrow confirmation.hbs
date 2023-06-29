@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+    
+    th, td {
+      border: 1px solid black;
+      padding: 8px;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <table>
+    <tr>
+      <th colspan="4">THÔNG BÁO MỚI</th>
+    </tr>
+    <tr>
+      <td colspan="4">Ngày tháng gửi: {{dateSend}}</td>
+    </tr>
+    <tr>
+      <td colspan="4">Anh/chị vừa có công văn mới</td>
+    </tr>
+    <tr>
+      <td colspan="4">Người gửi: Hệ thống</td>
+    </tr>
+    <tr>
+      <td colspan="4">ID phiếu mượn: {{formId}}</td>
+    </tr>
+    <tr>
+      <td colspan="2">Ngày mượn: {{borrowDate}}</td>
+      <td colspan="2">Ngày trả: {{returnDate}}</td>
+    </tr>
+    <tr>
+      <td colspan="2">Tên dự án: {{project}}</td>
+      <td colspan="2">Đơn vị: {{unit}}</td>
+    </tr>
+    <tr>
+      <td colspan="2">Người nhận: {{executor}}</td>
+      <td colspan="2">Người gửi: {{borrower}}</td>
+    </tr>
+    <tr>
+      <td colspan="2">Trạng thái: {{status}}</td>
+    </tr>
+    <tr>
+      <td colspan="4">Anh/chị có thể nhấp vào liên kết xem nội dung: <a href="https://www.example.com">https://www.example.com</a></td>
+    </tr>
+    <tr>
+      <td colspan="4">Trung tâm năng lực số DCC</td>
+    </tr>
+  </table>
+</body>
+</html>
