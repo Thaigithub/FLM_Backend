@@ -599,6 +599,17 @@ export class FormService {
                             data:{
                                 status: 50
                             }
+                        });
+                        (await this.utilsService.deviceBorrowService.getbyformid(form.id)).map(element=>element.deviceId).forEach(async(element)=>{
+                            await this.prismaService.device.update({
+                                where:{
+                                    id:element
+                                },
+                                data:{
+                                    status:2
+                                }
+                            })
+                            await this.utilsService.deviceHistoryService.record(element,2,form.id,"Device is borrowed")
                         })
                         const formhistory = await this.utilsService.formHistoryService.record(form.id,50,userId,"Form is approved by borrower and waiting for confirmation of examination of borrower")
                         const user = await this.prismaService.user.findUnique({
@@ -665,6 +676,17 @@ export class FormService {
                             data:{
                                 status: 95
                             }
+                        });
+                        (await this.utilsService.deviceBorrowService.getbyreturnformid(returnform.id)).map(element=>element.deviceId).forEach(async(element)=>{
+                            await this.prismaService.device.update({
+                                where:{
+                                    id:element
+                                },
+                                data:{
+                                    status:0
+                                }
+                            })
+                            await this.utilsService.deviceHistoryService.record(element,2,returnform.id,"Device is borrowed")
                         })
                         const formhistory = await this.utilsService.formHistoryService.record(returnform.id,95,userId,"Form is approved by borrower and waiting for confirmation of examination of examiner")
                         const form = await this.prismaService.form.findUnique({
@@ -1725,15 +1747,6 @@ export class FormService {
                             status:body.evaluate[element]
                         }
                     })
-                    await this.prismaService.device.update({
-                        where:{
-                            id:element,
-                        },
-                        data:{
-                            status:2
-                        }
-                    })
-                    await this.utilsService.deviceHistoryService.record(element,2,form.id,null)
                 })
                 await this.prismaService.form.update({
                     where:{
@@ -1824,15 +1837,6 @@ export class FormService {
                             status:body.evaluate[element]
                         }
                     })
-                    await this.prismaService.device.update({
-                        where:{
-                            id:element,
-                        },
-                        data:{
-                            status:0
-                        }
-                    })
-                    await this.utilsService.deviceHistoryService.record(element,0,form.id,null)
                 })
                 await this.prismaService.returnForm.update({
                     where:{

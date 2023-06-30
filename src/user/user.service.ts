@@ -35,7 +35,7 @@ export class UserService {
                     email: body.email
                 }
             })
-            if (!user) {
+            if (user) {
                 return {
                     status: 409,
                     message: "Email existed"
