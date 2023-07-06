@@ -2036,7 +2036,7 @@ export class FormService {
             else if (role===2) {
                 return {
                     status: 200,
-                    message: (await this.prismaService.user.findMany({
+                    message: await (await this.prismaService.user.findMany({
                         where:{
                             execId: userId
                         },

@@ -10,8 +10,8 @@ import { ApiBody, ApiTags } from '@nestjs/swagger';
 export class UserController {
     constructor(private userService:UserService){}
 
-    @UseGuards(AuthGuard('jwt'))
-    @UseGuards(new RolesGuard([5]))
+    // @UseGuards(AuthGuard('jwt'))
+    // @UseGuards(new RolesGuard([5]))
     @ApiBody({
         type:UserRegisterDto
     })

@@ -26,9 +26,6 @@ export class FormCreateDto {
     @IsArray()
     @IsNotEmpty()
     devices: Array<string>
-
-    @ApiProperty()
-    userId: string
 }
 
 export class FormConfigDto {

@@ -172,15 +172,13 @@ export class UserService {
                 }
                 return array
             },Promise.resolve([]))
+            console.log(listuser)
             return {
                 status: 200,
-                ...res
+                message: res
             }
         }catch(error) {
-            return {
-                status: 500,
-                message: error
-            }
+            console.log(error)
         }
     }
     async updateadmin(data: UserUpdateadminDto) {

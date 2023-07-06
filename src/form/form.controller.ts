@@ -151,6 +151,7 @@ export class FormController {
         const response = await this.formService.getall(req.headers['authorization'].substring(7))
         const {status} = response
         delete response.status
+        console.log(response)
         res.status(status).json(response.message)
     }
     @UseGuards(AuthGuard('jwt'))
@@ -159,6 +160,7 @@ export class FormController {
         const response = await this.formService.getdetail(type,id)
         const {status} = response
         delete response.status
+        
         res.status(status).json(response)
     }
 }   
