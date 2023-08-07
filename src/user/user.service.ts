@@ -9,51 +9,66 @@ export class UserService {
         private prismaService: PrismaService,
         private jwtService: JwtService,
     ) {}
-    async register(registerdata: UserRegisterDto){
-        const hasedPassword = await argon.hash(registerdata.password)
+    async register(body: UserRegisterDto){
         try {
-            if (registerdata.role===1) {
-                if (!registerdata.execId) {
+            if (body.role===1) {
+                if (!body.execId) {
                     return{
+                        status: 409,
                         message: "Missing execId"
                     }
                 }
                 const execId = await this.prismaService.user.findUnique({
                     where:{
-                        id: registerdata.execId
+                        id: body.execId
                     }
                 })
                 if (!execId) {
                     return {
+                        status: 409,
                         message: "ExecId not found"
                     }
                 }
             }
+            const user = await this.prismaService.user.findUnique({
+                where:{
+                    email: body.email
+                }
+            })
+            if (user) {
+                return {
+                    status: 409,
+                    message: "Email existed"
+                }
+            }
+            const hasedPassword = await argon.hash(body.password)
             await this.prismaService.user.create({
                 data: {
-                    email: registerdata.email,
+                    email: body.email,
                     hashedPassword: hasedPassword,
-                    firstName: registerdata.firstName,
-                    lastName: registerdata.lastName,
-                    unit: registerdata.unit,
-                    role: registerdata.role,
-                    execId: registerdata.execId
+                    firstName: body.firstName,
+                    lastName: body.lastName,
+                    unit: body.unit,
+                    role: body.role,
+                    execId: body.execId
                 }
             })
             return {
+                status: 201,
                 message:"Successful"
             }
         }
         catch(error){
             return {
-                error: error
+                status: 500,
+                message:error
             }
         }
         
     }
     async getdetail(jwtToken:string){
-        const userId = await this.jwtService.decode(jwtToken)['userId']
         try {
+            const userId = this.jwtService.decode(jwtToken)['userId']
             const user = await this.prismaService.user.findUnique({
                 where:{
                     id: userId
@@ -66,24 +81,30 @@ export class UserService {
                     role:true
                 }
             })
-            return user
+            return {
+                status: 200, 
+                ...user
+            }
         }
         catch(error) {
-            console.log(error)
+            return {
+                status: 500,
+                message: error
+            }
         }
     }
-    async updatedetail(jwtToken:string, data:UserUpdatedetailDto) {
+    async updatedetail(jwtToken:string, body:UserUpdatedetailDto) {
         try{
             const userId = await this.jwtService.decode(jwtToken)['userId']
-            if (data.password) {
-                const hasedPassword = await argon.hash(data.password)
+            if (body.password) {
+                const hasedPassword = await argon.hash(body.password)
                 await this.prismaService.user.update({
                     where: {
                         id: userId
                     },
                     data: {
-                        lastName: data.lastName,
-                        firstName:data.firstName,
+                        lastName: body.lastName,
+                        firstName:body.firstName,
                         hashedPassword: hasedPassword                
                     }
                 })
@@ -94,17 +115,21 @@ export class UserService {
                         id: userId
                     },
                     data: {
-                        lastName: data.lastName,
-                        firstName: data.firstName             
+                        lastName: body.lastName,
+                        firstName: body.firstName             
                     }
                 })
             }
             return {
+                status: 200,
                 message:"Successful"
             }
         }
         catch(error) {
-            console.log(error)
+            return {
+                status: 500,
+                message: error
+            }
         }
     }
     async getall () {
@@ -147,7 +172,11 @@ export class UserService {
                 }
                 return array
             },Promise.resolve([]))
-            return res
+            console.log(listuser)
+            return {
+                status: 200,
+                message: res
+            }
         }catch(error) {
             console.log(error)
         }
@@ -188,10 +217,14 @@ export class UserService {
                 })
             }
             return {
+                status: 200,
                 message:"Successful"
             }
         }catch(error) {
-            console.log(error)
+            return {
+                status: 500,
+                message: error
+            }
         }
     }
 }

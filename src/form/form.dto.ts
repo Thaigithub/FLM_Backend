@@ -26,45 +26,96 @@ export class FormCreateDto {
     @IsArray()
     @IsNotEmpty()
     devices: Array<string>
+}
+
+export class FormConfigDto {
+    @ApiProperty()
+    @IsString()
+    @IsNotEmpty()
+    formId: string
+
+    @ApiProperty()
+    @IsISO8601()
+    @IsNotEmpty()
+    borrowDate: string
+    // YYYY-MM-DDTHH:MM:SSZ
+    @ApiProperty()
+    @IsISO8601()
+    @IsNotEmpty()
+    returnDate: string
+
+    @ApiProperty()
+    @IsString()
+    @IsNotEmpty()
+    project: string
+
+    @ApiProperty()
+    @IsString()
+    @IsNotEmpty()
+    decision: string
+
+    @ApiProperty()
+    @IsArray()
+    @IsNotEmpty()
+    devices: Array<string>
 
     @ApiProperty()
     userId: string
 }
-export class FormDetailDto{
+export class FormAddAttachDto {
     @ApiProperty()
     @IsString()
     @IsNotEmpty()
     formId: string
 }
+export class FormDeleteAttachDto {
+    @ApiProperty()
+    @IsString()
+    @IsNotEmpty()
+    id: string
+}
+export class FormLoadAttachDto {
+    @ApiProperty()
+    @IsString()
+    @IsNotEmpty()
+    id: string
+}
+export class FormCreateReturnDto {
+    @ApiProperty()
+    @IsString()
+    @IsNotEmpty()
+    formId:string
 
-export class FormApproveDto{
+    @ApiProperty()
+    @IsArray()
+    @IsNotEmpty()
+    devices: Array<string>
+}
+export class FormConfigReturnDto {
+    @ApiProperty()
+    @IsString()
+    @IsNotEmpty()
+    formId: string
+
+    @ApiProperty()
+    @IsArray()
+    @IsNotEmpty()
+    devices: Array<string>
+}
+export class FormConfirmDto {
     @ApiProperty()
     @IsString()
     @IsNotEmpty()
     formId: string
 }
-
-export class FormRejectDto{
-    @ApiProperty()
-    @IsString()
-    @IsNotEmpty()
-    formId: string
-}
-
-export class FormReturnDto{
-    @ApiProperty()
-    @IsString()
-    @IsNotEmpty()
-    formId: string
-}
-export class FormUpdateStatusDto{
+export class FormEvaluateDto {
     @ApiProperty()
     @IsString()
     @IsNotEmpty()
     formId: string
 
     @ApiProperty()
-    @IsNumber()
+    @IsArray()
     @IsNotEmpty()
-    status: number
+    evaluate: {[deviceId:string]:boolean}
 }

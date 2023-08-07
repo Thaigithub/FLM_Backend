@@ -1,4 +1,5 @@
-import { Controller, Get, UseGuards, Body, Req, Post } from '@nestjs/common';
+import { Controller, Get, UseGuards, Body, Req, Post, Res } from '@nestjs/common';
+import { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport'
 import { UserService } from './user.service';
 import { UserUpdateadminDto, UserUpdatedetailDto, UserRegisterDto, UserIdDto } from './user.dto';
@@ -8,41 +9,61 @@ import { ApiBody, ApiTags } from '@nestjs/swagger';
 @Controller('user')
 export class UserController {
     constructor(private userService:UserService){}
+
+    // @UseGuards(AuthGuard('jwt'))
+    // @UseGuards(new RolesGuard([5]))
+    @ApiBody({
+        type:UserRegisterDto
+    })
+    @Post('register')
+    async register(@Body() body:UserRegisterDto, @Res() res: Response) {
+        const response = await this.userService.register(body)
+        const {message} = response
+        res.status(response.status).json(message)
+        
+    }
+
     @UseGuards(AuthGuard('jwt'))
     @Get('getdetail')
-    getdetail(@Req() req: Request){
-        return this.userService.getdetail(req.headers['authorization'].substring(7))
+    async getdetail(@Req() req: Request, @Res() res: Response){
+        const response = await this.userService.getdetail(req.headers['authorization'].substring(7))
+        const {status} = response
+        delete response.status
+        res.status(status).json(response)
     }
+
     @UseGuards(AuthGuard('jwt'))
     @ApiBody({
         type:UserUpdatedetailDto
     })
     @Post('updatedetail')
-    updatedetail(@Req() req: Request, @Body() body: UserUpdatedetailDto ){
-        return this.userService.updatedetail(req.headers['authorization'].substring(7),body)
+    async updatedetail(@Req() req: Request, @Body() body: UserUpdatedetailDto, @Res() res: Response){
+        const response = await this.userService.updatedetail(req.headers['authorization'].substring(7),body)
+        const {status} = response
+        delete response.status
+        res.status(status).json(response)
     }
-    @UseGuards(AuthGuard('jwt'))
-    @UseGuards(new RolesGuard([5]))
-    @ApiBody({
-        type:UserRegisterDto
-    })
-    @Post('register')
-    register(@Body() body:UserRegisterDto) {
-        return this.userService.register(body)
-    }
+
     @UseGuards(AuthGuard('jwt'))
     @UseGuards(new RolesGuard([5]))
     @ApiBody({
         type:UserUpdateadminDto
     })
     @Post('updateadmin')
-    updateadmin(@Body() body:UserUpdateadminDto) {
-        return this.userService.updateadmin(body)
+    async updateadmin(@Body() body:UserUpdateadminDto, @Res() res: Response) {
+        const response = await this.userService.updateadmin(body)
+        const {status} = response
+        delete response.status
+        res.status(status).json(response)
     }
+
     @UseGuards(AuthGuard('jwt'))
     @UseGuards(new RolesGuard([5]))
     @Get('getall')
-    getall(){
-        return this.userService.getall()
+    async getall(@Res() res: Response){
+        const response = await this.userService.getall()
+        const {status} = response
+        delete response.status
+        res.status(status).json(response)
     }
 }

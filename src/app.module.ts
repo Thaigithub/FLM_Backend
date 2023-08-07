@@ -6,6 +6,7 @@ import { FormModule } from './form/form.module';
 import { DeviceModule } from './device/device.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { MailModule } from './mail/mail.module';
+import { UtilsModule } from './utils/utils.module';
 @Module({
   imports: [
     MailModule,
@@ -17,7 +18,7 @@ import { MailModule } from './mail/mail.module';
     ConfigModule.forRoot({
       isGlobal: true
     }),
-    
+    UtilsModule
   ]
 })
 export class AppModule {}

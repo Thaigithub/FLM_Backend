@@ -27,14 +27,21 @@ export class DeviceUpdateDto {
     @IsNumber()
     @IsNotEmpty()
     status: number
+
+    @ApiProperty()
+    note: string
+
+    
+    @ApiProperty()
+    formId: string
 }
-export class DeviceImageAddDto {
+export class DeviceMediaAddDto {
     @ApiProperty()
     @IsString()
     @IsNotEmpty()
     deviceId: string
 }
-export class DeviceImageDeleteDto {
+export class DeviceMediaDeleteDto {
     @ApiProperty()
     @IsString()
     @IsNotEmpty()

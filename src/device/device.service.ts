@@ -1,15 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { DeviceCreateDto, DeviceImageAddDto, DeviceImageDeleteDto, DeviceUpdateDto } from './device.dto';
-import { ConfigService } from '@nestjs/config';
-import { createWriteStream, existsSync, mkdirSync, unlink } from 'fs';
-import * as path from 'path';
-import { error } from 'console';
+import { DeviceCreateDto, DeviceUpdateDto, DeviceMediaAddDto, DeviceMediaDeleteDto } from './device.dto';
+import { UtilsService } from '../utils/utils.service';
+import { Response } from 'express';
 @Injectable()
 export class DeviceService {
     constructor(
         private prismaService: PrismaService,
-        private configService: ConfigService
+        private utilsService: UtilsService
     ){}
     async create(body: DeviceCreateDto, medias: Express.Multer.File[]){
         try {
@@ -23,42 +21,21 @@ export class DeviceService {
                     id: true
                 }
             })
+            await this.utilsService.deviceHistoryService.record(body.id,0,null,'Device is added to the system')
             if (medias!==undefined){
-                const destination = this.configService.get('MEDIA_LOCATION')
-                medias.map(async (element)=>{
-                    const extension = path.extname(element.originalname)
-                    const media = await this.prismaService.deviceImage.create({
-                        data:{
-                            deviceId:device.id
-                        }
-                    })
-                    const filepath = `${destination}/${device.id}`
-                    if (!existsSync(filepath)) {
-                        mkdirSync(filepath, { recursive: true });
-                    }
-                    const writestream = createWriteStream(`${filepath}/${media.id}${extension}`)
-                    writestream.write(element.buffer)
-                    writestream.end()
-                    await this.prismaService.deviceImage.update({
-                        where: {
-                            id: media.id
-                        },
-                        data:{
-                            url: filepath
-                        }
-                    })
-                    await this.prismaService.deviceHistory.create({
-                        data:{
-                            deviceId:device.id
-                        }
-                    })
-                })
+                return await this.utilsService.deviceMediaService.addmedia(device.id,medias)
             }
-            return {
-                message:"Successful"
+            else {
+                return {
+                    status: 200,
+                    message:"Successful"
+                }
             }
         }catch(error) {
-            console.log(error)
+            return {
+                status: 500,
+                message: error
+            }
         }
     }
     async update(body: DeviceUpdateDto){
@@ -72,90 +49,70 @@ export class DeviceService {
                     status: body.status
                 }
             })
+            await this.utilsService.deviceHistoryService.record(body.id,body.status,body.formId,body.note)
             return {
-                message:"Successfull"
+                status: 200,
+                message:"Successful"
             }
         }catch(error){
-            console.log(error)
-        }
-    }
-    async addmedia(body: DeviceImageAddDto,medias: Express.Multer.File[]){
-        try{
-            const destination = this.configService.get('MEDIA_LOCATION')
-            medias.map(async (element)=>{
-                const extension = path.extname(element.originalname)
-                const media = await this.prismaService.deviceImage.create({
-                    data:{
-                        deviceId:body.deviceId
-                    }
-                })
-                const filepath = `${destination}/${body.deviceId}`
-                if (!existsSync(filepath)) {
-                    mkdirSync(filepath, { recursive: true });
-                }
-                const writestream = createWriteStream(`${filepath}/${media.id}${extension}`)
-                writestream.write(element.buffer)
-                writestream.end()
-                await this.prismaService.deviceImage.update({
-                    where: {
-                        id: media.id
-                    },
-                    data:{
-                        url: filepath
-                    }
-                })
-            })
-            await this.prismaService.deviceHistory.create({
-                data:{
-                    deviceId:body.deviceId,
-                }
-            })
             return {
-                message: "Successfull"
+                status: 500,
+                message: error
             }
-        }catch(error){
-            console.log(error)
-        }
-    }
-    async deletemedia(body: DeviceImageDeleteDto){
-        try{
-            const media = await this.prismaService.deviceImage.delete({
-                where:{
-                    id: body.id
-                },
-                select:{
-                    url: true
-                }
-            })
-            unlink(media.url,(error)=>{throw(error)})
-            return {
-                message: "Successfull"
-            }
-        }catch(error){
-            console.log(error)
         }
     }
     async getall(){
         try{
-            return await this.prismaService.device.findMany({})
+            const data =  await this.prismaService.device.findMany({})
+            return {
+                status: 200,
+                data: data
+            }
         }catch(error){
-            console.log(error)
+            return {
+                status: 500,
+                message: error
+            }
         }
     }
-    async getavailable(){
-        try{
-            return await this.prismaService.device.findMany({
+    async getdetail(id:string){
+        try {
+            const device = await this.prismaService.device.findUnique({
                 where:{
-                    status:0
+                    id:id
                 },
                 select:{
-                    id: true,
-                    name: true
+                    status:true
                 }
             })
+            if (!device) {
+                return {
+                    status: 404,
+                    message: 'Device not found'
+                }
+            }
+            const devicemedia = await this.utilsService.deviceMediaService.getbydeviceid(id)
+            const devicehistory = await this.utilsService.deviceHistoryService.getbydeviceid(id)
+            return{
+                status: 200,
+                device: device,
+                media: devicemedia.map(element=>element.id),
+                history: devicehistory
+            }
         }catch(error){
-            console.log(error)
+            return {
+                status: 500,
+                message: error
+            }
         }
     }
-    
+    async addmedia(medias: Express.Multer.File[],body: DeviceMediaAddDto){
+        return await this.utilsService.deviceMediaService.addmedia(body.deviceId,medias)
+    }
+    async deletemedia (body: DeviceMediaDeleteDto){
+        return this.utilsService.deviceMediaService.deletemedia(body.id)
+    }
+    async loadmedia(id: string, res: Response){
+        await this.utilsService.deviceMediaService.loadmedia(id, res)
+    }
 }

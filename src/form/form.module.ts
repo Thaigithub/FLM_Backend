@@ -4,9 +4,10 @@ import { FormController } from './form.controller';
 import { PrismaModule } from '../prisma/prisma.module';
 import { JwtModule } from '@nestjs/jwt';
 import { MailModule } from '../mail/mail.module';
+import { UtilsModule } from '../utils/utils.module';
 
 @Module({
-  imports: [PrismaModule, JwtModule, MailModule],
+  imports: [PrismaModule, JwtModule, MailModule, UtilsModule],
   providers: [FormService],
   controllers: [FormController]
 })

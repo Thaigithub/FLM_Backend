@@ -1,15 +1,18 @@
-import { Controller, UseGuards, Post, Get, Body, UseInterceptors, UploadedFiles } from '@nestjs/common';
+import { Controller, UseGuards, Post, Get, Body, UseInterceptors, UploadedFiles, Res, Param } from '@nestjs/common';
+import { Response } from 'express';
 import { DeviceService } from './device.service';
+import { UtilsService } from '../utils/utils.service';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/auth.strategy';
-import { DeviceCreateDto, DeviceImageAddDto, DeviceImageDeleteDto, DeviceUpdateDto } from './device.dto';
+import { DeviceCreateDto, DeviceMediaAddDto, DeviceMediaDeleteDto, DeviceUpdateDto } from './device.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
-import { type } from 'os';
 @ApiTags('Device')
 @Controller('device')
 export class DeviceController {
-    constructor(private deviceService:DeviceService){}
+    constructor(
+        private deviceService:DeviceService
+    ){}
     @UseGuards(AuthGuard('jwt'))
     @UseGuards(new RolesGuard([5]))
     @ApiBody({
@@ -17,46 +20,80 @@ export class DeviceController {
     })
     @Post('create')
     @UseInterceptors(FilesInterceptor('medias'))
-    create(@UploadedFiles() medias: Express.Multer.File[], @Body() body:DeviceCreateDto){
-        return this.deviceService.create(body, medias)
+    async create(@UploadedFiles() medias: Express.Multer.File[], @Body() body:DeviceCreateDto, @Res() res: Response){
+        const response = await this.deviceService.create(body, medias)
+        const {status} = response
+        delete response.status
+        res.status(status).json(response)
     }
+
     @UseGuards(AuthGuard('jwt'))
     @UseGuards(new RolesGuard([5]))
     @ApiBody({
         type:DeviceUpdateDto
     })
     @Post('update')
-    update(@Body() body: DeviceUpdateDto){
-        return this.deviceService.update(body)
+    async update(@Body() body: DeviceUpdateDto, @Res() res: Response){
+        const response = await this.deviceService.update(body)
+        const {status} = response
+        delete response.status
+        res.status(status).json(response)
     }
+
     @UseGuards(AuthGuard('jwt'))
     @UseGuards(new RolesGuard([5]))
     @ApiBody({
-        type:DeviceImageAddDto
+        type:DeviceMediaAddDto
     })
     @Post('addmedia')
     @UseInterceptors(FilesInterceptor('medias'))
-    addmedia(@UploadedFiles() medias: Express.Multer.File[],@Body() body: DeviceImageAddDto){
-        return this.deviceService.addmedia(body,medias)
+    async addmedia(@UploadedFiles() medias: Express.Multer.File[],@Body() body: DeviceMediaAddDto, @Res() res: Response){
+        const response = await this.deviceService.addmedia(medias, body)
+        const {status} = response
+        delete response.status
+        res.status(status).json(response)
     }
     @UseGuards(AuthGuard('jwt'))
     @UseGuards(new RolesGuard([5]))
     @ApiBody({
-        type:DeviceImageDeleteDto
+        type:DeviceMediaDeleteDto
     })
     @Post('deletemedia')
-    deletemedia(@Body() body: DeviceImageDeleteDto){
-        return this.deviceService.deletemedia(body)
+    async deletemedia(@Body() body: DeviceMediaDeleteDto, @Res() res: Response){
+        const response = await this.deviceService.deletemedia(body)
+        const {status} = response
+        delete response.status
+        res.status(status).json(response)
     }
+
     @UseGuards(AuthGuard('jwt'))
-    @UseGuards(new RolesGuard([4,5]))
     @Get('getall')
-    getall(){
-        return this.deviceService.getall()
+    async getall(@Res() res: Response){
+        const response = await this.deviceService.getall()
+        if (response.status===200) {
+            res.status(response.status).json(response.data)
+        }
+        else {
+            res.status(response.status).json(response.message)
+        }
+    }
+
+    @Get('getdetail/:id')
+    async getdetail(@Res() res: Response, @Param('id') id:string){
+        const response = await this.deviceService.getdetail(id)
+        if (response.status===200){
+            const {status, device} = response
+            delete response.status
+            delete response.device
+            res.status(status).json({...response,...device})
+        }
+        else {
+            res.status(response.status).json(response.message)
+        }
     }
     @UseGuards(AuthGuard('jwt'))
-    @Get('getavailable')
-    getavailable(){
-        return this.deviceService.getavailable()
+    @Get('loadmedia/:id')
+    async loadmedia(@Res() res: Response, @Param('id') id:string){
+        await this.deviceService.loadmedia(id, res)
     }
 }
