@@ -107,7 +107,7 @@ export class FormController {
         res.status(status).json(response)
     }
     @UseGuards(AuthGuard('jwt'))
-    @UseGuards(new RolesGuard([1,2,3]))
+    @UseGuards(new RolesGuard([1,2,3,4]))
     @ApiBody({
         type:FormConfirmDto
     })
@@ -146,9 +146,9 @@ export class FormController {
     @ApiBody({
         type: FormEvaluateDto
     })
-    @Get('getall')
-    async getall(@Res() res: Response, @Req() req: Request){
-        const response = await this.formService.getall(req.headers['authorization'].substring(7))
+    @Get('getall/:type')
+    async getall(@Res() res: Response, @Param('type') type:string, @Req() req: Request){
+        const response = await this.formService.getall(req.headers['authorization'].substring(7), type)
         const {status} = response
         delete response.status
         console.log(response)

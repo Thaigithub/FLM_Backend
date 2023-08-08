@@ -38,7 +38,7 @@ export class FormService {
                         status:true
                     }
                 })
-                if (device===undefined) {
+                if (!device) {
                     return{
                         status: 404,
                         message:'Device not found'  
@@ -119,7 +119,7 @@ export class FormService {
                     message: "Form unfound"
                 }
             }
-            if (!(([10,21].includes(form.status)&&role===1) || ([30,40,51].includes(form.status)&&role===4))){
+            if (!(([40,21].includes(form.status)&&role===1) || ([30,51].includes(form.status)&&role===4))){
                 return {
                     status: 403,
                     message: "Form is not at appropriate status to config"
@@ -1328,36 +1328,36 @@ export class FormService {
                         }
                     }
                 }
-                case 2:{
-                    if (type==='borrow') {
+                case 2: {
+                    if (type === 'borrow') {
                         const form = await this.prismaService.form.findUnique({
-                            where:{
+                            where: {
                                 id: body.formId
                             }
-                        })
+                        });
                         if (!form) {
-                            return{
+                            return {
                                 status: 404,
                                 message: "Form not found"
-                            }
+                            };
                         }
-                        if ([10,31].includes(form.status)){
-                            return{
+                        if (![10, 31].includes(form.status)) {
+                            return {
                                 status: 403,
                                 message: "Form not at appropriate status for you to approve"
-                            }
+                            };
                         }
                         await this.prismaService.form.update({
-                            where:{
+                            where: {
                                 id: form.id
                             },
-                            data:{
+                            data: {
                                 status: 21
                             }
-                        })
-                        const formhistory = await this.utilsService.formHistoryService.record(form.id,21,userId,"Form is denied by execborrower and may be fixed by borrower")
+                        });
+                        const formhistory = await this.utilsService.formHistoryService.record(form.id, 21, userId, "Form is denied by execborrower and may be fixed by borrower");
                         const user = await this.prismaService.user.findUnique({
-                            where:{
+                            where: {
                                 id: form.userId
                             },
                             select: {
@@ -1365,24 +1365,24 @@ export class FormService {
                                 lastName: true,
                                 unit: true,
                                 execId: true,
-                                id:true,
-                                email:true
+                                id: true,
+                                email: true
                             }
-                        })
+                        });
                         const exec = await this.prismaService.user.findUnique({
-                            where:{
-                                id:userId
+                            where: {
+                                id: userId
                             },
-                            select:{
-                                firstName:true,
-                                lastName:true,
-                                email:true
+                            select: {
+                                firstName: true,
+                                lastName: true,
+                                email: true
                             }
-                        })
+                        });
                         const context = {
                             sender: `${exec.lastName} ${exec.firstName}`,
                             dateSend: formhistory.date,
-                            formId:form.id,
+                            formId: form.id,
                             borrowDate: format(new Date(form.borrowDate), 'dd-MM-yyyy'),
                             returnDate: format(new Date(form.returnDate), 'dd-MM-yyyy'),
                             project: form.project,
@@ -1391,46 +1391,45 @@ export class FormService {
                             borrower: `${user.lastName} ${user.firstName}`,
                             status: 21
                         };
-                        this.mailService.sendEmail(user.email,"Thông báo đơn mượn bị từ chối",context,'borrow')
+                        this.mailService.sendEmail(user.email, "Thông báo đơn mượn bị từ chối", context, 'borrow');
                         return {
                             status: 200,
                             message: "Successful"
-                        }
-                    }
-                    else {
+                        };
+                    } else if (type === 'return') {
                         const returnform = await this.prismaService.returnForm.findUnique({
-                            where:{
+                            where: {
                                 id: body.formId
                             }
-                        })
+                        });
                         if (!returnform) {
-                            return{
+                            return {
                                 status: 404,
                                 message: "Form not found"
-                            }
+                            };
                         }
-                        if ([60,81].includes(returnform.status)){
-                            return{
+                        if (returnform.status !== 60 && returnform.status !== 81) {
+                            return {
                                 status: 403,
                                 message: "Form not at appropriate status for you to approve"
-                            }
+                            };
                         }
                         await this.prismaService.returnForm.update({
-                            where:{
+                            where: {
                                 id: returnform.id
                             },
-                            data:{
+                            data: {
                                 status: 71
                             }
-                        })
-                        const formhistory = await this.utilsService.formHistoryService.record(returnform.id,71,userId,"Return form is denied by execborrower and may be fixed by borrower")
+                        });
+                        const formhistory = await this.utilsService.formHistoryService.record(returnform.id, 71, userId, "Return form is denied by execborrower and may be fixed by borrower");
                         const form = await this.prismaService.form.findUnique({
-                            where:{
+                            where: {
                                 id: returnform.formId
                             }
-                        })
+                        });
                         const user = await this.prismaService.user.findUnique({
-                            where:{
+                            where: {
                                 id: form.userId
                             },
                             select: {
@@ -1438,25 +1437,25 @@ export class FormService {
                                 lastName: true,
                                 unit: true,
                                 execId: true,
-                                id:true,
-                                email:true
+                                id: true,
+                                email: true
                             }
-                        })
+                        });
                         const exec = await this.prismaService.user.findUnique({
-                            where:{
-                                id:userId
+                            where: {
+                                id: userId
                             },
-                            select:{
-                                firstName:true,
-                                lastName:true,
-                                email:true
+                            select: {
+                                firstName: true,
+                                lastName: true,
+                                email: true
                             }
-                        })
+                        });
                         const context = {
                             sender: `${exec.lastName} ${exec.firstName}`,
                             dateSend: formhistory.date,
-                            borowFormId:form.id,
-                            returnFormId:returnform.id,
+                            borowFormId: form.id,
+                            returnFormId: returnform.id,
                             borrowDate: format(new Date(form.borrowDate), 'dd-MM-yyyy'),
                             returnDate: format(new Date(form.returnDate), 'dd-MM-yyyy'),
                             project: form.project,
@@ -1465,13 +1464,15 @@ export class FormService {
                             borrower: `${user.lastName} ${user.firstName}`,
                             status: 71
                         };
-                        this.mailService.sendEmail(user.email,"Thông báo đơn mượn bị từ chối",context,'return')
+                        this.mailService.sendEmail(user.email, "Thông báo đơn mượn bị từ chối", context, 'return');
                         return {
                             status: 200,
                             message: "Successful"
-                        }
+                        };
                     }
                 }
+                
+               
                 case 3:{
                     if (type==='borrow') {
                         const form = await this.prismaService.form.findUnique({
@@ -1643,7 +1644,7 @@ export class FormService {
                 }
             }
             const form = formlist[0]
-            if ([10,21].includes(form.status)) {
+            if (![10,21].includes(form.status)) {
                 return {
                     status: 403,
                     message: "Form is not at appropriate status to be canceled"
@@ -1955,6 +1956,7 @@ export class FormService {
                         formId:form.id
                     }
                 })
+                
                 const evaluateform = await this.prismaService.evaluateForm.findMany({
                     where:{
                         formId:form.id
@@ -2019,24 +2021,39 @@ export class FormService {
             }
         }
     }
-    async getall(jwtToken:string){
+    async getall(jwtToken:string, type:string){
         try{
             const userId = this.jwtService.decode(jwtToken)['userId']
             const role = this.jwtService.decode(jwtToken)['role']
-            if (role===1){
-                return {
-                    status: 200,
-                    message: await this.prismaService.form.findMany({
-                        where:{
-                            userId: userId
-                        }
-                    })
+            if (!['borrow', 'return'].includes(type)) {
+                return{
+                    status:400,
+                    message: "BAD_REQUEST on type of request"
                 }
             }
-            else if (role===2) {
-                return {
-                    status: 200,
-                    message: await (await this.prismaService.user.findMany({
+            if (type==='return'){
+                if (role===1){
+                    return {
+                        status: 200,
+                        message: await (await this.prismaService.form.findMany({
+                            where:{
+                                userId: userId
+                            },
+                            select:{
+                                id:true
+                            }
+                        })).reduce(async (promise, element)=>{
+                            const accum = await promise
+                            return accum.concat(await this.prismaService.returnForm.findMany({
+                                where:{
+                                    formId:element.id
+                                }
+                            }))
+                        }, Promise.resolve([]))
+                    }
+                }
+                else if (role===2) {
+                    const ret = await (await this.prismaService.user.findMany({
                         where:{
                             execId: userId
                         },
@@ -2048,15 +2065,111 @@ export class FormService {
                         return accum.concat(await this.prismaService.form.findMany({
                             where:{
                                 userId:element
+                            },
+                            select:{
+                                id:true
                             }
                         }))
                     },Promise.resolve([]))
+                    return {
+                        status: 200,
+                        message: await ret.reduce(async (promise, element)=>{
+                            const accum = await promise
+                            return accum.concat(await this.prismaService.returnForm.findMany({
+                                where:{
+                                    formId:element.id
+                                }
+                            }))
+                        }, Promise.resolve([]))
+                    }
+                }
+                else{
+                    return {
+                        status: 200,
+                        message: await this.prismaService.returnForm.findMany()
+                    }
+                }
+            }
+            if (role===1){
+                return {
+                    status: 200,
+                    message: await Promise.all((await this.prismaService.form.findMany({
+                        where:{
+                            userId: userId
+                        }
+                    })).map(async (element)=>{
+                        const user = await this.prismaService.user.findUnique({
+                            where:{
+                                id: element.userId
+                            },
+                            select:{
+                                unit:true,
+                                lastName: true,
+                                firstName: true
+                            }
+                        })
+                        return {
+                            ...element,
+                            user: user
+                        }
+                    }))
+                }
+            }
+            else if (role===2) {
+                const ret = await (await this.prismaService.user.findMany({
+                    where:{
+                        execId: userId
+                    },
+                    select:{
+                        id:true
+                    }
+                })).map(element=>element.id).reduce(async(promise,element)=>{
+                    const accum = await promise
+                    return accum.concat(await this.prismaService.form.findMany({
+                        where:{
+                            userId:element
+                        }
+                    }))
+                },Promise.resolve([]))
+                return {
+                    status: 200,
+                    message: await Promise.all(ret.map(async (element)=>{
+                        const user = await this.prismaService.user.findUnique({
+                            where:{
+                                id: element.userId
+                            },
+                            select:{
+                                unit:true,
+                                lastName: true,
+                                firstName: true
+                            }
+                        })
+                        return {
+                            ...element,
+                            user: user
+                        }
+                    }))
                 }
             }
             else {
                 return {
                     status: 200,
-                    message: await this.prismaService.form.findMany()
+                    message: await Promise.all( (await this.prismaService.form.findMany()).map(async (element)=>{
+                        const user = await this.prismaService.user.findUnique({
+                            where:{
+                                id: element.userId
+                            },
+                            select:{
+                                unit:true,
+                                lastName: true,
+                                firstName: true
+                            }
+                        })
+                        return {
+                            ...element,
+                            user: user
+                        }
+                    }))
                 }
             }
         }catch(error){
